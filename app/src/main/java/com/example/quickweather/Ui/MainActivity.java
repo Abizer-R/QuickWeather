@@ -46,6 +46,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
+    // TODO: UPDATE THESE ALONG THE WAY TOO
+    private ImageView locationIndicator;
+    private TextView currentLocation;
+    private TextView lastUpdatedCurrent;
+
     private TextView currTemp;
     private TextView currDesc;
     private ImageView currDescIcon;
@@ -56,6 +61,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        locationIndicator = findViewById(R.id.location_image_view);
+        currentLocation = findViewById(R.id.location_text_view);
+        lastUpdatedCurrent = findViewById(R.id.last_updated_current);
 
         currTemp = findViewById(R.id.current_temp);
         currDesc = findViewById(R.id.current_desc);
