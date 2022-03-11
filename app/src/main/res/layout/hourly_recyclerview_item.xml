@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:orientation="vertical">
+
+        <!--    <androidx.constraintlayout.widget.ConstraintLayout-->
+        <!--        android:layout_width="match_parent"-->
+        <!--        android:layout_height="match_parent"-->
+        <!--        android:orientation="vertical">-->
+
+        <TextView
+            android:id="@+id/hourly_rv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="top|center_horizontal"
+            android:text="3:00 PM"
+            android:textSize="10sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="8dp"/>
+
+        <ImageView
+            android:id="@+id/hourly_rv_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginTop="8dp"
+            android:src="@drawable/icons8_sun_80"/>
+
+        <TextView
+            android:id="@+id/hourly_rv_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_gravity="top|center_horizontal"
+            android:text="28°"
+            android:textColor="@android:color/white"/>
+
+
+        <!--    </androidx.constraintlayout.widget.ConstraintLayout>-->
+
+
+</LinearLayout>
