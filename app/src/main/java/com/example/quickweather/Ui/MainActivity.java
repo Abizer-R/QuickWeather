@@ -19,9 +19,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.quickweather.Data.Model.DailyWeatherForecast;
+import com.example.quickweather.Data.Source.Local.Entity.DBDailyWeather;
 import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
 import com.example.quickweather.Data.Source.Remote.RetrofitHelper;
 import com.example.quickweather.Data.Model.NetworkWeatherDetails;
+import com.example.quickweather.Mapper.DailyMapperLocal;
 import com.example.quickweather.Mapper.DailyMapperRemote;
 import com.example.quickweather.Mapper.HourlyMapperLocal;
 import com.example.quickweather.Mapper.HourlyMapperRemote;
@@ -48,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     HourlyMapperRemote hourlyMapperRemote = new HourlyMapperRemote();
     DailyMapperRemote dailyMapperRemote = new DailyMapperRemote();
     HourlyMapperLocal hourlyMapperLocal = new HourlyMapperLocal();
+    DailyMapperLocal dailyMapperLocal = new DailyMapperLocal();
 
     private WeatherViewModel weatherViewModel;
 
@@ -72,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setViewModel();
+        setViewModelAndObservers();
 
         bindViewsWithVariables();
 
@@ -128,14 +131,20 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         lastUpdated = findViewById(R.id.last_updated);
     }
 
-    private void setViewModel() {
+    private void setViewModelAndObservers() {
         weatherViewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
+
         weatherViewModel.getHourlyWeather().observe(this, new Observer<List<DBHourlyWeather>>() {
             @Override
             public void onChanged(List<DBHourlyWeather> dbHourlyWeathers) {
-                //TODO: set proper method
                 hourlyAdapter.setHourlyForecasts(hourlyMapperLocal.mapFromEntity(dbHourlyWeathers));
-//                Toast.makeText(MainActivity.this, "HOURLY CHAL GAYA BAWAAAAA", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        weatherViewModel.getDailyWeather().observe(this, new Observer<List<DBDailyWeather>>() {
+            @Override
+            public void onChanged(List<DBDailyWeather> dailyWeathers) {
+                dailyAdapter.setDailyForecasts(dailyMapperLocal.mapFromEntity(dailyWeathers));
             }
         });
     }
@@ -166,7 +175,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                     updateRecyclerViewCurrent(weatherDetails.getCurrent(), weatherDetails.getDaily().get(0));
                     insertDbHourly(weatherDetails.getHourly());
 //                    updateRecyclerViewHourly(weatherDetails.getHourly());
-                    updateRecyclerViewDaily(weatherDetails.getDaily());
+                    insertDbDaily(weatherDetails.getDaily());
+//                    updateRecyclerViewDaily(weatherDetails.getDaily());
                 }
             }
 
@@ -179,7 +189,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void insertDbHourly(List<Hourly> hourlyList) {
         weatherViewModel.deleteAllHourlyData();
+        if(hourlyList.get(0).getDt() < System.currentTimeMillis())
+            hourlyList.remove(0);
         weatherViewModel.insertAllHourlyData(hourlyList);
+    }
+
+    private void insertDbDaily(List<Daily> dailyList) {
+        weatherViewModel.deleteAllDailyData();
+        weatherViewModel.insertAllDailyData(dailyList);
     }
 
     private void updateRecyclerViewCurrent(Current current, Daily daily) {
@@ -201,11 +218,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateRecyclerViewDaily(List<Daily> dailyList) {
 
-        List<DailyWeatherForecast> dailyForecasts = new ArrayList<>();
-        for(int i=0; i<7; i++) {
-            dailyForecasts.add(dailyMapperRemote.mapFromEntity(dailyList.get(i)));
-        }
-        dailyAdapter.setDailyForecasts(dailyForecasts);
+        dailyAdapter.setDailyForecasts(dailyMapperRemote.mapFromEntity(dailyList));
     }
 
     @Override
