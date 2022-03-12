@@ -3,12 +3,15 @@ package com.example.quickweather.Ui;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -16,11 +19,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.quickweather.Data.Model.DailyWeatherForecast;
-import com.example.quickweather.Data.Model.HourlyWeatherForecast;
+import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
 import com.example.quickweather.Data.Source.Remote.RetrofitHelper;
 import com.example.quickweather.Data.Model.NetworkWeatherDetails;
-import com.example.quickweather.Mapper.DailyMapper;
-import com.example.quickweather.Mapper.HourlyMapper;
+import com.example.quickweather.Mapper.DailyMapperRemote;
+import com.example.quickweather.Mapper.HourlyMapperLocal;
+import com.example.quickweather.Mapper.HourlyMapperRemote;
 import com.example.quickweather.R;
 import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
@@ -40,6 +44,12 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+
+    HourlyMapperRemote hourlyMapperRemote = new HourlyMapperRemote();
+    DailyMapperRemote dailyMapperRemote = new DailyMapperRemote();
+    HourlyMapperLocal hourlyMapperLocal = new HourlyMapperLocal();
+
+    private WeatherViewModel weatherViewModel;
 
     WeatherHourlyDetailsAdapter hourlyAdapter;
     WeatherDailyDetailsAdapter dailyAdapter;
@@ -62,19 +72,23 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        locationIndicator = findViewById(R.id.location_image_view);
-        currentLocation = findViewById(R.id.location_text_view);
-        lastUpdatedCurrent = findViewById(R.id.last_updated_current);
+        setViewModel();
 
-        currTemp = findViewById(R.id.current_temp);
-        currDesc = findViewById(R.id.current_desc);
-        currDescIcon = findViewById(R.id.current_icon);
-        currMinMaxTemp = findViewById(R.id.current_max_min_temp);
-        lastUpdated = findViewById(R.id.last_updated);
+        bindViewsWithVariables();
+
+        setRecyclerViews();
 
         Toolbar myToolbar = findViewById(R.id.custom_toolbar);
         setSupportActionBar(myToolbar);
 
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
+
+        // TODO: Remove this one
+        updateView();
+    }
+
+    private void setRecyclerViews() {
         /*
           Setting up Hourly Recycler View
          */
@@ -100,12 +114,30 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         DividerItemDecoration divider = new DividerItemDecoration(this, DividerItemDecoration.VERTICAL);
         divider.setDrawable(getDrawable(R.drawable.daily_recyclerview_divider));
         dailyRecyclerView.addItemDecoration(divider);
+    }
 
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(this);
+    private void bindViewsWithVariables() {
+        locationIndicator = findViewById(R.id.location_image_view);
+        currentLocation = findViewById(R.id.location_text_view);
+        lastUpdatedCurrent = findViewById(R.id.last_updated_current);
 
-        // TODO: Remove this one
-        updateView();
+        currTemp = findViewById(R.id.current_temp);
+        currDesc = findViewById(R.id.current_desc);
+        currDescIcon = findViewById(R.id.current_icon);
+        currMinMaxTemp = findViewById(R.id.current_max_min_temp);
+        lastUpdated = findViewById(R.id.last_updated);
+    }
+
+    private void setViewModel() {
+        weatherViewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
+        weatherViewModel.getHourlyWeather().observe(this, new Observer<List<DBHourlyWeather>>() {
+            @Override
+            public void onChanged(List<DBHourlyWeather> dbHourlyWeathers) {
+                //TODO: set proper method
+                hourlyAdapter.setHourlyForecasts(hourlyMapperLocal.mapFromEntity(dbHourlyWeathers));
+//                Toast.makeText(MainActivity.this, "HOURLY CHAL GAYA BAWAAAAA", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateView() {
@@ -124,28 +156,30 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             public void onResponse(Call<NetworkWeatherDetails> call, Response<NetworkWeatherDetails> response) {
 
                 if(!response.isSuccessful()) {
-                    // TODO: Remove Toast in the end
-                    Toast.makeText(MainActivity.this, "Response code: " + response.code(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "onResponse: " + "Response code: " + response.code());
                     return;
                 }
 
                 NetworkWeatherDetails weatherDetails = response.body();
                 if(weatherDetails != null) {
 
-                    updateRecyclerViewCurrent(
-                            weatherDetails.getCurrent(),
-                            weatherDetails.getDaily().get(0));
-                    updateRecyclerViewHourly(weatherDetails.getHourly());
+                    updateRecyclerViewCurrent(weatherDetails.getCurrent(), weatherDetails.getDaily().get(0));
+                    insertDbHourly(weatherDetails.getHourly());
+//                    updateRecyclerViewHourly(weatherDetails.getHourly());
                     updateRecyclerViewDaily(weatherDetails.getDaily());
                 }
             }
 
             @Override
             public void onFailure(Call<NetworkWeatherDetails> call, Throwable t) {
-                // TODO: Remove Toast in the end
-                Toast.makeText(MainActivity.this, "onFailure: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "onFailure: Network Call failed. throwable msg: " + t.getMessage());
             }
         });
+    }
+
+    private void insertDbHourly(List<Hourly> hourlyList) {
+        weatherViewModel.deleteAllHourlyData();
+        weatherViewModel.insertAllHourlyData(hourlyList);
     }
 
     private void updateRecyclerViewCurrent(Current current, Daily daily) {
@@ -162,20 +196,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateRecyclerViewHourly(List<Hourly> hourlyList) {
 
-        List<HourlyWeatherForecast> hourlyForecasts = new ArrayList<>();
-        HourlyMapper mapper = new HourlyMapper();
-        for(int i=0; i<25; i++) {
-            hourlyForecasts.add(mapper.mapFromEntity(hourlyList.get(i)));
-        }
-        hourlyAdapter.setHourlyForecasts(hourlyForecasts);
+        hourlyAdapter.setHourlyForecasts(hourlyMapperRemote.mapFromEntity(hourlyList));
     }
 
     private void updateRecyclerViewDaily(List<Daily> dailyList) {
 
         List<DailyWeatherForecast> dailyForecasts = new ArrayList<>();
-        DailyMapper mapper = new DailyMapper();
         for(int i=0; i<7; i++) {
-            dailyForecasts.add(mapper.mapFromEntity(dailyList.get(i)));
+            dailyForecasts.add(dailyMapperRemote.mapFromEntity(dailyList.get(i)));
         }
         dailyAdapter.setDailyForecasts(dailyForecasts);
     }
