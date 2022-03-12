@@ -6,10 +6,12 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+import com.example.quickweather.Data.Source.Local.Dao.DailyWeatherDao;
 import com.example.quickweather.Data.Source.Local.Dao.HourlyWeatherDao;
+import com.example.quickweather.Data.Source.Local.Entity.DBDailyWeather;
 import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
 
-@Database(entities = {DBHourlyWeather.class}, version = 1)
+@Database(entities = {DBHourlyWeather.class, DBDailyWeather.class}, version = 2)
 public abstract class WeatherDatabase extends RoomDatabase {
 
     // We create this variable because we have to turn this class into a "singleton"
@@ -17,6 +19,7 @@ public abstract class WeatherDatabase extends RoomDatabase {
     private static WeatherDatabase instance;
 
     public abstract HourlyWeatherDao hourlyDataDao();
+    public abstract DailyWeatherDao dailyWeatherDao();
 
     /*
         We can get a handle to the database instance from this method.

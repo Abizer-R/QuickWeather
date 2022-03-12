@@ -10,7 +10,7 @@ public class DateTimeUtil {
     public static String getLocalTime(long timestamp) {
 
         Date timeD = new Date(timestamp * 1000);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm aa");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("hh:mm aa");
 
         return dateFormat.format(timeD);
     }
