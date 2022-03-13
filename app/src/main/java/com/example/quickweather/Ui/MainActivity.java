@@ -40,6 +40,7 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.http.HEAD;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
@@ -55,11 +56,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     WeatherDailyDetailsAdapter dailyAdapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
-
-    // TODO: UPDATE THESE ALONG THE WAY TOO
-    private ImageView locationIndicator;
-    private TextView currentLocation;
-    private TextView lastUpdatedCurrent;
 
     private TextView currTemp;
     private TextView currDesc;
@@ -77,6 +73,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         bindViewsWithVariables();
 
         setRecyclerViews();
+        currTemp = findViewById(R.id.current_temp);
+        currDesc = findViewById(R.id.current_desc);
+        currDescIcon = findViewById(R.id.current_icon);
+        currMinMaxTemp = findViewById(R.id.current_max_min_temp);
+        lastUpdated = findViewById(R.id.last_updated);
 
         Toolbar myToolbar = findViewById(R.id.custom_toolbar);
         setSupportActionBar(myToolbar);
