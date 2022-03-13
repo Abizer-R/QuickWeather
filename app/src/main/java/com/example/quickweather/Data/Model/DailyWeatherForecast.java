@@ -4,15 +4,15 @@ public class DailyWeatherForecast {
 
     private long timestamp;
 
-    private String iconId;
+    private int weatherId;
 
     private int temp_min;
 
     private int temp_max;
 
-    public DailyWeatherForecast(long timestamp, String iconId, int temp_min, int temp_max) {
+    public DailyWeatherForecast(long timestamp, int iconId, int temp_min, int temp_max) {
         this.timestamp = timestamp;
-        this.iconId = iconId;
+        this.weatherId = iconId;
         this.temp_min = temp_min;
         this.temp_max = temp_max;
     }
@@ -21,8 +21,8 @@ public class DailyWeatherForecast {
         return timestamp;
     }
 
-    public String getIconId() {
-        return iconId;
+    public int getWeatherId() {
+        return weatherId;
     }
 
     public int getTemp_min() {

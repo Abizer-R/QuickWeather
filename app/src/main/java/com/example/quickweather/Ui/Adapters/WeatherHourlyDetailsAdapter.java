@@ -1,6 +1,5 @@
 package com.example.quickweather.Ui.Adapters;
 
-import android.text.Layout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,7 +36,8 @@ public class WeatherHourlyDetailsAdapter extends RecyclerView.Adapter<WeatherHou
         HourlyWeatherForecast currHour = hourlyForecasts.get(position);
 
         holder.time.setText(DateTimeUtil.getLocalTime(currHour.getTimestamp()));
-        holder.icon.setImageResource(IconUtils.getIconResourceId(currHour.getIconId()));
+        // TODO: IDHR BHIII KUCHH KARRRR
+        holder.icon.setImageResource(R.drawable.ic_01d);
         holder.temp.setText(String.valueOf(currHour.getTemp()) + "°");
     }
 
