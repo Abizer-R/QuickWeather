@@ -18,38 +18,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.quickweather.Data.Model.DailyWeatherForecast;
-import com.example.quickweather.Data.Source.Local.Entity.DBDailyWeather;
-import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
-import com.example.quickweather.Data.Source.Remote.RetrofitHelper;
-import com.example.quickweather.Data.Model.NetworkWeatherDetails;
+import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 import com.example.quickweather.Mapper.DailyMapperLocal;
-import com.example.quickweather.Mapper.DailyMapperRemote;
 import com.example.quickweather.Mapper.HourlyMapperLocal;
-import com.example.quickweather.Mapper.HourlyMapperRemote;
 import com.example.quickweather.R;
 import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
-import com.example.quickweather.Data.Model.NetworkWeatherDetails.Current;
-import com.example.quickweather.Data.Model.NetworkWeatherDetails.Hourly;
-import com.example.quickweather.Data.Model.NetworkWeatherDetails.Daily;
-import com.example.quickweather.Utils.IconUtils;
+import com.example.quickweather.Utils.DateTimeUtil;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.http.HEAD;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    HourlyMapperRemote hourlyMapperRemote = new HourlyMapperRemote();
-    DailyMapperRemote dailyMapperRemote = new DailyMapperRemote();
     HourlyMapperLocal hourlyMapperLocal = new HourlyMapperLocal();
     DailyMapperLocal dailyMapperLocal = new DailyMapperLocal();
 
@@ -59,6 +42,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     WeatherDailyDetailsAdapter dailyAdapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    // TODO: UPDATE THESE ALONG THE WAY TOO
+    private ImageView locationIndicator;
+    private TextView currentLocation;
+    private TextView lastUpdatedCurrent;
 
     private TextView currTemp;
     private TextView currDesc;
@@ -88,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
 
-        // TODO: Remove this one
         updateView();
     }
 
@@ -135,91 +122,44 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void setViewModelAndObservers() {
         weatherViewModel = new ViewModelProvider(this).get(WeatherViewModel.class);
 
-        weatherViewModel.getHourlyWeather().observe(this, new Observer<List<DBHourlyWeather>>() {
+        weatherViewModel.getCurrDBData().observe(this, new Observer<DBWeatherDetails>() {
             @Override
-            public void onChanged(List<DBHourlyWeather> dbHourlyWeathers) {
-                hourlyAdapter.setHourlyForecasts(hourlyMapperLocal.mapFromEntity(dbHourlyWeathers));
+            public void onChanged(DBWeatherDetails weatherDetails) {
+                if(weatherDetails != null)
+                    updateCurrentWeatherData(weatherDetails);
             }
         });
 
-        weatherViewModel.getDailyWeather().observe(this, new Observer<List<DBDailyWeather>>() {
+        weatherViewModel.getHourlyDBData().observe(this, new Observer<List<DBWeatherDetails>>() {
             @Override
-            public void onChanged(List<DBDailyWeather> dailyWeathers) {
-                dailyAdapter.setDailyForecasts(dailyMapperLocal.mapFromEntity(dailyWeathers));
+            public void onChanged(List<DBWeatherDetails> dbWeatherDetails) {
+                hourlyAdapter.setHourlyForecasts(hourlyMapperLocal.mapFromEntity(dbWeatherDetails));
             }
         });
+
+        weatherViewModel.getDailyDBData().observe(this, new Observer<List<DBWeatherDetails>>() {
+            @Override
+            public void onChanged(List<DBWeatherDetails> dbWeatherDetails) {
+                dailyAdapter.setDailyForecasts(dailyMapperLocal.mapFromEntity(dbWeatherDetails));
+            }
+        });
+
     }
 
     private void updateView() {
-
-        // lat=22.7196&lon=75.8577&units=metric&exclude=minutely,alerts&appid=6b40419e55e87b4c7eb082eca5f50dab
-        Call<NetworkWeatherDetails> weatherDetailCall = RetrofitHelper.getWeatherApiClient().getWeatherDetails(
-                22.7196,
-                75.8577,
-                "metric",
-                "minutely,alerts",
-                "6b40419e55e87b4c7eb082eca5f50dab"
-        );
-
-        weatherDetailCall.enqueue(new Callback<NetworkWeatherDetails>() {
-            @Override
-            public void onResponse(Call<NetworkWeatherDetails> call, Response<NetworkWeatherDetails> response) {
-
-                if(!response.isSuccessful()) {
-                    Log.e(TAG, "onResponse: " + "Response code: " + response.code());
-                    return;
-                }
-
-                NetworkWeatherDetails weatherDetails = response.body();
-                if(weatherDetails != null) {
-
-                    updateRecyclerViewCurrent(weatherDetails.getCurrent(), weatherDetails.getDaily().get(0));
-                    insertDbHourly(weatherDetails.getHourly());
-//                    updateRecyclerViewHourly(weatherDetails.getHourly());
-                    insertDbDaily(weatherDetails.getDaily());
-//                    updateRecyclerViewDaily(weatherDetails.getDaily());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<NetworkWeatherDetails> call, Throwable t) {
-                Log.e(TAG, "onFailure: Network Call failed. throwable msg: " + t.getMessage());
-            }
-        });
+        weatherViewModel.updateDBWeatherData();
     }
 
-    private void insertDbHourly(List<Hourly> hourlyList) {
-        weatherViewModel.deleteAllHourlyData();
-        if(hourlyList.get(0).getDt() < System.currentTimeMillis())
-            hourlyList.remove(0);
-        weatherViewModel.insertAllHourlyData(hourlyList);
-    }
+    private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
 
-    private void insertDbDaily(List<Daily> dailyList) {
-        weatherViewModel.deleteAllDailyData();
-        weatherViewModel.insertAllDailyData(dailyList);
-    }
-
-    private void updateRecyclerViewCurrent(Current current, Daily daily) {
-
-        currTemp.setText(String.valueOf((int)current.getTemp()));
-        currDesc.setText(current.getWeather().get(0).getDescription());
-        currDescIcon.setImageResource(IconUtils.getIconResourceId(current.getWeather().get(0).getIcon()));
-        currMinMaxTemp.setText((int)daily.getDailyTemp().getMax() + "° / " +
-                (int)daily.getDailyTemp().getMin() + "°");
+        currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
+        currDesc.setText("Idhr ka kuch karrrrr");
+        currDescIcon.setImageResource(R.drawable.ic_01d);
+        currMinMaxTemp.setText((int)weatherDetails.getMaxTemp() + "° / " +
+                (int)weatherDetails.getMinTemp() + "°");
 
         // TODO: Do update Last Seen after Implementing "Local"
-        lastUpdated.setText("updated 20 minutes ago");
-    }
-
-    private void updateRecyclerViewHourly(List<Hourly> hourlyList) {
-
-        hourlyAdapter.setHourlyForecasts(hourlyMapperRemote.mapFromEntity(hourlyList));
-    }
-
-    private void updateRecyclerViewDaily(List<Daily> dailyList) {
-
-        dailyAdapter.setDailyForecasts(dailyMapperRemote.mapFromEntity(dailyList));
+        lastUpdated.setText("last updated: " + DateTimeUtil.getLocalTime(weatherDetails.getTimestamp()));
     }
 
     @Override

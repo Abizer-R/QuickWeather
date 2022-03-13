@@ -2,24 +2,33 @@ package com.example.quickweather.Data.Source.Repository;
 
 import android.app.Application;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
-import com.example.quickweather.Data.Source.Local.Dao.DailyWeatherDao;
-import com.example.quickweather.Data.Source.Local.Entity.DBDailyWeather;
-import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
-import com.example.quickweather.Data.Source.Local.Dao.HourlyWeatherDao;
+import com.example.quickweather.Data.Model.NetworkWeatherDetails;
+import com.example.quickweather.Data.Source.Local.Dao.DBWeatherDao;
+import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 import com.example.quickweather.Data.Source.Local.WeatherDatabase;
+import com.example.quickweather.Data.Source.Remote.RetrofitHelper;
+import com.example.quickweather.Ui.WeatherRemoteApiCallback;
 
+import java.nio.channels.AsynchronousChannelGroup;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class WeatherRepository {
 
-    private HourlyWeatherDao hourlyWeatherDao;
-    private DailyWeatherDao dailyWeatherDao;
+    private static final String TAG = WeatherRepository.class.getSimpleName();
 
-    private LiveData<List<DBHourlyWeather>> hourlyData;
-    private LiveData<List<DBDailyWeather>> dailyData;
+    private DBWeatherDao dbWeatherDao;
+
+    private LiveData<DBWeatherDetails> currDBData;
+    private LiveData<List<DBWeatherDetails>> hourlyDBData;
+    private LiveData<List<DBWeatherDetails>> dailyDBData;
 
     /*
         We pass "Application" because later in our viewModel, we will
@@ -30,104 +39,94 @@ public class WeatherRepository {
     public WeatherRepository(Application application) {
 
         WeatherDatabase database = WeatherDatabase.getInstance(application);
-        hourlyWeatherDao = database.hourlyDataDao();
-        hourlyData = hourlyWeatherDao.getLocalHourlyData();
+        dbWeatherDao = database.dbWeatherDao();
 
-        dailyWeatherDao = database.dailyWeatherDao();
-        dailyData = dailyWeatherDao.getLocalDailyData();
+        currDBData = dbWeatherDao.getCurrentDBWeatherData();
+        hourlyDBData = dbWeatherDao.getHourlyDBWeatherData();
+        dailyDBData = dbWeatherDao.getDailyDBWeatherData();
     }
 
-    public void insertHourlyData(List<DBHourlyWeather> hourlyWeathers) {
+    public void fetchRemoteWeatherData(WeatherRemoteApiCallback callback) {
+        Call<NetworkWeatherDetails> weatherDetailCall = RetrofitHelper.getWeatherApiClient().getWeatherDetails(
+                22.7196,
+                75.8577,
+                "metric",
+                "minutely,alerts",
+                "6b40419e55e87b4c7eb082eca5f50dab"
+        );
+
+        weatherDetailCall.enqueue(new Callback<NetworkWeatherDetails>() {
+            @Override
+            public void onResponse(Call<NetworkWeatherDetails> call, Response<NetworkWeatherDetails> response) {
+
+                if(!response.isSuccessful()) {
+                    Log.e(TAG, "onResponse: " + "Response code: " + response.code());
+                    return;
+                }
+
+                NetworkWeatherDetails weatherDetails = response.body();
+                if(weatherDetails != null) {
+                    callback.onSuccess(weatherDetails);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<NetworkWeatherDetails> call, Throwable t) {
+                Log.e(TAG, "onFailure: Network Call failed. throwable msg: " + t.getMessage());
+            }
+        });
+    }
+
+    public void insertDBWeatherData(List<DBWeatherDetails> currWeather) {
         // TODO: (Use executor threadpool or something)
-        new InsertHourlyWeatherTask(hourlyWeatherDao).execute(hourlyWeathers);
+        new InsertDBWeatherData(dbWeatherDao).execute(currWeather);
     }
 
-
-    public void deleteAllHourlyData() {
+    public void deleteAllWeatherData() {
         // TODO: (Use executor threadpool or something)
-        new DeleteAllHourlyDataTask(hourlyWeatherDao).execute();
+        new DeleteDBWeatherData(dbWeatherDao).execute();
     }
 
-    public LiveData<List<DBHourlyWeather>> getHourlyData() {
-        return hourlyData;
-    }
+    private static class InsertDBWeatherData extends AsyncTask<List<DBWeatherDetails>, Void, Void> {
 
-    public void insertDailyData(List<DBDailyWeather> dailyWeathers) {
-        // TODO: (Use executor threadpool or something)
-        new InsertDailyWeatherTask(dailyWeatherDao).execute(dailyWeathers);
-    }
+        private DBWeatherDao dbWeatherDao;
 
-    public void deleteAllDailyData() {
-        // TODO: (Use executor threadpool or something)
-        new DeleteAllDailyDataTask(dailyWeatherDao).execute();
-    }
-
-    public LiveData<List<DBDailyWeather>> getDailyData() {
-        return dailyData;
-    }
-
-    private static class InsertHourlyWeatherTask extends AsyncTask<List<DBHourlyWeather>, Void, Void> {
-
-        private HourlyWeatherDao hourlyWeatherDao;
-
-        private InsertHourlyWeatherTask(HourlyWeatherDao dao) {
-            hourlyWeatherDao = dao;
+        private InsertDBWeatherData(DBWeatherDao dao) {
+            dbWeatherDao = dao;
         }
 
         @Override
-        protected Void doInBackground(List<DBHourlyWeather>... lists) {
-            List<DBHourlyWeather> weatherList = lists[0];
-            for(int i=0; i< weatherList.size(); i++)
-                    hourlyWeatherDao.insert(weatherList.get(i));
+        protected Void doInBackground(List<DBWeatherDetails>... lists) {
+            List<DBWeatherDetails> weatherlist = lists[0];
+            for(int i=0; i<weatherlist.size(); i++)
+                    dbWeatherDao.insert(weatherlist.get(i));
             return null;
         }
     }
 
-    private static class DeleteAllHourlyDataTask extends AsyncTask<Void, Void, Void> {
+    private static class DeleteDBWeatherData extends AsyncTask<Void, Void, Void> {
 
-        private HourlyWeatherDao hourlyWeatherDao;
+        private DBWeatherDao dbWeatherDao;
 
-        private DeleteAllHourlyDataTask(HourlyWeatherDao dao) {
-            hourlyWeatherDao = dao;
+        private DeleteDBWeatherData(DBWeatherDao dao) {
+            dbWeatherDao = dao;
         }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-            hourlyWeatherDao.deleteAllHourlyData();
-            return null;
-        }
-    }
-
-    private static class InsertDailyWeatherTask extends AsyncTask<List<DBDailyWeather>, Void, Void> {
-
-        private DailyWeatherDao dailyWeatherDao;
-
-        private InsertDailyWeatherTask(DailyWeatherDao dao) {
-            dailyWeatherDao = dao;
-        }
-
-        @Override
-        protected Void doInBackground(List<DBDailyWeather>... lists) {
-            List<DBDailyWeather> weatherList = lists[0];
-            for(int i=0; i<weatherList.size(); i++)
-                dailyWeatherDao.insert(weatherList.get(i));
-            return null;
-        }
-    }
-
-    private static class DeleteAllDailyDataTask extends AsyncTask<Void, Void, Void> {
-
-        private DailyWeatherDao dailyWeatherDao;
-
-        private DeleteAllDailyDataTask(DailyWeatherDao dao) {
-            dailyWeatherDao = dao;
-        }
-
         @Override
         protected Void doInBackground(Void... voids) {
-            dailyWeatherDao.deleteAllDailyData();
+            dbWeatherDao.deleteAllDBWeatherData();
             return null;
         }
     }
 
+    public LiveData<DBWeatherDetails> getCurrDBData() {
+        return currDBData;
+    }
+
+    public LiveData<List<DBWeatherDetails>> getHourlyDBData() {
+        return hourlyDBData;
+    }
+
+    public LiveData<List<DBWeatherDetails>> getDailyDBData() {
+        return dailyDBData;
+    }
 }

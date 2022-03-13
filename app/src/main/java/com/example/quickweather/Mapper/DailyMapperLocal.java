@@ -1,42 +1,30 @@
 package com.example.quickweather.Mapper;
 
 import com.example.quickweather.Data.Model.DailyWeatherForecast;
-import com.example.quickweather.Data.Source.Local.Entity.DBDailyWeather;
+import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DailyMapperLocal implements BaseMapper<List<DBDailyWeather>, List<DailyWeatherForecast>> {
+public class DailyMapperLocal implements BaseMapper<List<DBWeatherDetails>, List<DailyWeatherForecast>> {
 
     @Override
-    public List<DailyWeatherForecast> mapFromEntity(List<DBDailyWeather> dailyWeathers) {
+    public List<DailyWeatherForecast> mapFromEntity(List<DBWeatherDetails> dbWeatherDetails) {
         List<DailyWeatherForecast> dailyWeatherForecasts = new ArrayList<>();
-        for(int i=0; i<dailyWeathers.size(); i++) {
+        for(int i=0; i<dbWeatherDetails.size(); i++) {
 
-            DBDailyWeather currDay = dailyWeathers.get(i);
+            DBWeatherDetails currDay = dbWeatherDetails.get(i);
             dailyWeatherForecasts.add(new DailyWeatherForecast(
                     currDay.getTimestamp(),
-                    currDay.getIconId(),
-                    currDay.getTemp_min(),
-                    currDay.getTemp_max()
-            ));
+                    currDay.getWeatherId(),
+                    currDay.getMinTemp(),
+                    currDay.getMaxTemp()));
         }
         return dailyWeatherForecasts;
     }
 
     @Override
-    public List<DBDailyWeather> mapToEntity(List<DailyWeatherForecast> dailyWeatherForecasts) {
-        List<DBDailyWeather> dbDailyWeathers =new ArrayList<>();
-        for(int i=0; i<dailyWeatherForecasts.size(); i++) {
-
-            DailyWeatherForecast currDay = dailyWeatherForecasts.get(i);
-            dbDailyWeathers.add(new DBDailyWeather(
-                    currDay.getTimestamp(),
-                    currDay.getIconId(),
-                    currDay.getTemp_min(),
-                    currDay.getTemp_max()
-            ));
-        }
-        return dbDailyWeathers;
+    public List<DBWeatherDetails> mapToEntity(List<DailyWeatherForecast> dailyWeatherForecasts) {
+        return null;
     }
 }

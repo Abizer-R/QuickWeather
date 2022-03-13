@@ -1,41 +1,30 @@
 package com.example.quickweather.Mapper;
 
 import com.example.quickweather.Data.Model.HourlyWeatherForecast;
-import com.example.quickweather.Data.Source.Local.Entity.DBHourlyWeather;
+import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HourlyMapperLocal implements BaseMapper<List<DBHourlyWeather>, List<HourlyWeatherForecast>> {
+public class HourlyMapperLocal implements BaseMapper<List<DBWeatherDetails>, List<HourlyWeatherForecast>> {
 
     @Override
-    public List<HourlyWeatherForecast> mapFromEntity(List<DBHourlyWeather> dbHourlyWeathers) {
+    public List<HourlyWeatherForecast> mapFromEntity(List<DBWeatherDetails> dbWeatherDetails) {
         List<HourlyWeatherForecast> hourlyWeatherForecasts = new ArrayList<>();
-        for(int i=0; i<dbHourlyWeathers.size(); i++) {
+        for(int i=0; i<dbWeatherDetails.size(); i++) {
 
-            DBHourlyWeather currHour = dbHourlyWeathers.get(i);
+            DBWeatherDetails currHour = dbWeatherDetails.get(i);
             hourlyWeatherForecasts.add(new HourlyWeatherForecast(
                     currHour.getTimestamp(),
-                    currHour.getIconId(),
-                    currHour.getTemp()
+                    currHour.getWeatherId(),
+                    currHour.getCurrTemp()
             ));
         }
         return hourlyWeatherForecasts;
     }
 
     @Override
-    public List<DBHourlyWeather> mapToEntity(List<HourlyWeatherForecast> hourlyWeatherForecasts) {
-
-        List<DBHourlyWeather> dbHourlyWeathers = new ArrayList<>();
-        for(int i=0; i<hourlyWeatherForecasts.size(); i++) {
-
-            HourlyWeatherForecast currHour = hourlyWeatherForecasts.get(i);
-            dbHourlyWeathers.add(new DBHourlyWeather(
-                    currHour.getTimestamp(),
-                    currHour.getIconId(),
-                    currHour.getTemp()
-            ));
-        }
-        return dbHourlyWeathers;
+    public List<DBWeatherDetails> mapToEntity(List<HourlyWeatherForecast> hourlyWeatherForecasts) {
+        return null;
     }
 }

@@ -14,8 +14,6 @@ import com.example.quickweather.R;
 import com.example.quickweather.Utils.DateTimeUtil;
 import com.example.quickweather.Utils.IconUtils;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +36,8 @@ public class WeatherDailyDetailsAdapter extends RecyclerView.Adapter<WeatherDail
         DailyWeatherForecast currDay = dailyForecasts.get(position);
 
         holder.date.setText(DateTimeUtil.getLocalDate(currDay.getTimestamp()));
-        holder.icon.setImageResource(IconUtils.getIconResourceId(currDay.getIconId()));
+        // TODO: IDHR BHIII KUCHHH KARRRR
+        holder.icon.setImageResource(R.drawable.ic_01d);
         holder.tempMinMax.setText(String.valueOf(currDay.getTemp_max()) + "° / " +
                         String.valueOf(currDay.getTemp_min()) + "°");
     }
