@@ -4,19 +4,29 @@ import com.example.quickweather.Data.Model.DailyWeatherForecast;
 import com.example.quickweather.Data.Model.NetworkWeatherDetails;
 import com.example.quickweather.Data.Model.NetworkWeatherDetails.Daily;
 
-public class DailyMapperRemote implements BaseMapper<Daily, DailyWeatherForecast> {
+import java.util.ArrayList;
+import java.util.List;
+
+public class DailyMapperRemote implements BaseMapper<List<Daily>, List<DailyWeatherForecast>> {
+
     @Override
-    public DailyWeatherForecast mapFromEntity(Daily daily) {
-        return new DailyWeatherForecast(
-                daily.getDt(),
-                daily.getWeather().get(0).getIcon(),
-                (int) daily.getDailyTemp().getMin(),
-                (int) daily.getDailyTemp().getMax()
-        );
+    public List<DailyWeatherForecast> mapFromEntity(List<Daily> dailyList) {
+        List<DailyWeatherForecast> dailyWeatherForecasts = new ArrayList<>();
+        for (int i=0; i<dailyList.size(); i++) {
+
+            Daily currDay = dailyList.get(i);
+            dailyWeatherForecasts.add(new DailyWeatherForecast(
+                    currDay.getDt(),
+                    currDay.getWeather().get(0).getIcon(),
+                    (int) currDay.getDailyTemp().getMin(),
+                    (int) currDay.getDailyTemp().getMax()
+            ));
+        }
+        return dailyWeatherForecasts;
     }
 
     @Override
-    public Daily mapToEntity(DailyWeatherForecast dailyWeatherForecast) {
+    public List<Daily> mapToEntity(List<DailyWeatherForecast> dailyWeatherForecasts) {
         return null;
     }
 }
