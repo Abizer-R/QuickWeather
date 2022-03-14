@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.quickweather.Data.Model.DailyWeatherForecast;
 import com.example.quickweather.R;
 import com.example.quickweather.Utils.DateTimeUtil;
-import com.example.quickweather.Utils.IconUtils;
+import com.example.quickweather.Utils.WeatherUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public class WeatherDailyDetailsAdapter extends RecyclerView.Adapter<WeatherDail
 
         holder.date.setText(DateTimeUtil.getLocalDate(currDay.getTimestamp()));
         // TODO: IDHR BHIII KUCHHH KARRRR
-        holder.icon.setImageResource(R.drawable.ic_01d);
+        holder.icon.setImageResource(WeatherUtils.getIconResourceId(currDay.getWeatherId(), currDay.getTimestamp()));
         holder.tempMinMax.setText(String.valueOf(currDay.getTemp_max()) + "° / " +
                         String.valueOf(currDay.getTemp_min()) + "°");
     }

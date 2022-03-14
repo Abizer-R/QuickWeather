@@ -1,5 +1,7 @@
 package com.example.quickweather.Utils;
 
+import android.widget.Toast;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -25,6 +27,18 @@ public class DateTimeUtil {
         return dateFormat.format(cal.getTime());
     }
 
+    public static boolean isDay(long timestamp) {
+
+        Date timeD = new Date(timestamp * 1000);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH");
+
+        int t = Integer.valueOf(dateFormat.format(timeD));
+
+        if(1 <= t && t <= 16)
+            return true;
+        else
+            return false;
+    }
 //    public static long getCurrentTimeInMillis() {
 //        return System.currentTimeMillis();
 //    }

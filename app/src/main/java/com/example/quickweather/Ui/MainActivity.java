@@ -26,6 +26,7 @@ import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
 import com.example.quickweather.Utils.DateTimeUtil;
+import com.example.quickweather.Utils.WeatherUtils;
 
 import java.util.List;
 
@@ -147,14 +148,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void updateView() {
+
         weatherViewModel.updateDBWeatherData();
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
 
         currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
-        currDesc.setText("Idhr ka kuch karrrrr");
-        currDescIcon.setImageResource(R.drawable.ic_01d);
+        currDesc.setText(WeatherUtils.getDescription(weatherDetails.getWeatherId()));
+        currDescIcon.setImageResource(WeatherUtils.getIconResourceId(weatherDetails.getWeatherId(), weatherDetails.getTimestamp()));
         currMinMaxTemp.setText((int)weatherDetails.getMaxTemp() + "° / " +
                 (int)weatherDetails.getMinTemp() + "°");
 

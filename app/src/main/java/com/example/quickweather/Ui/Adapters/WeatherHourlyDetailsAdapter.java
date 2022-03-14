@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.quickweather.Data.Model.HourlyWeatherForecast;
 import com.example.quickweather.R;
 import com.example.quickweather.Utils.DateTimeUtil;
-import com.example.quickweather.Utils.IconUtils;
+import com.example.quickweather.Utils.WeatherUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public class WeatherHourlyDetailsAdapter extends RecyclerView.Adapter<WeatherHou
 
         holder.time.setText(DateTimeUtil.getLocalTime(currHour.getTimestamp()));
         // TODO: IDHR BHIII KUCHH KARRRR
-        holder.icon.setImageResource(R.drawable.ic_01d);
+        holder.icon.setImageResource(WeatherUtils.getIconResourceId(currHour.getWeatherId(), currHour.getTimestamp()));
         holder.temp.setText(String.valueOf(currHour.getTemp()) + "°");
     }
 
