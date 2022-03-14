@@ -10,8 +10,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Context;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -25,7 +27,7 @@ import com.example.quickweather.R;
 import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
-import com.example.quickweather.Utils.DateTimeUtil;
+import com.example.quickweather.Utils.LocationUtils;
 import com.example.quickweather.Utils.WeatherUtils;
 
 import java.util.List;
@@ -44,10 +46,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
-    // TODO: UPDATE THESE ALONG THE WAY TOO
+    private LocationManager locationManager;
+
+    // TODO: changes according to "islocationAvalaible" prefs
     private ImageView locationIndicator;
+
+    // TODO: show according to latitude and longitude prefs
     private TextView currentLocation;
-    private TextView lastUpdatedCurrent;
+
+    // TODO: Visible only if islocationAvalaible = false
+    private TextView lastKnownLocationTV;
 
     private TextView currTemp;
     private TextView currDesc;
@@ -59,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         setViewModelAndObservers();
 
@@ -111,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void bindViewsWithVariables() {
         locationIndicator = findViewById(R.id.location_image_view);
         currentLocation = findViewById(R.id.location_text_view);
-        lastUpdatedCurrent = findViewById(R.id.last_updated_current);
+        lastKnownLocationTV = findViewById(R.id.is_location_available);
 
         currTemp = findViewById(R.id.current_temp);
         currDesc = findViewById(R.id.current_desc);
@@ -149,7 +159,22 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateView() {
 
-        weatherViewModel.updateDBWeatherData();
+        // TODO: Remove this location, as sharedPref is gonna be used to store location
+        Location currLoc = null;
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            LocationUtils.turnOnGps(this);
+        } else {
+            currLoc = LocationUtils.updateLocation(this);
+        }
+
+        if(currLoc == null) {
+            weatherViewModel.updateDBWeatherData(22.7196, 75.8577);
+            currentLocation.setText(LocationUtils.getAddress(this, 22.7196, 75.8577));
+        }
+        else {
+            weatherViewModel.updateDBWeatherData(currLoc.getLatitude(), currLoc.getLongitude());
+            currentLocation.setText(LocationUtils.getAddress(this, currLoc.getLatitude(), currLoc.getLongitude()));
+        }
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
@@ -157,11 +182,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
         currDesc.setText(WeatherUtils.getDescription(weatherDetails.getWeatherId()));
         currDescIcon.setImageResource(WeatherUtils.getIconResourceId(weatherDetails.getWeatherId(), weatherDetails.getTimestamp()));
-        currMinMaxTemp.setText((int)weatherDetails.getMaxTemp() + "° / " +
-                (int)weatherDetails.getMinTemp() + "°");
+        currMinMaxTemp.setText(WeatherUtils.getCurrentMinMaxTemp(
+                (int)weatherDetails.getMaxTemp(),
+                (int)weatherDetails.getMinTemp()));
 
-        // TODO: Do update Last Seen after Implementing "Local"
-        lastUpdated.setText("last updated: " + DateTimeUtil.getLocalTime(weatherDetails.getTimestamp()));
+        // TODO: Should also go in SharedPref Changed function..... Cuz we have to save last updated time in sharedPrefs
+        /*
+            instead of this....
+            We will update the sharedPref
+         */
+        lastUpdated.setText(WeatherUtils.getLastWeatherUpdated(weatherDetails.getTimestamp()));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.example.quickweather.Data.Source.Repository;
 
 import android.app.Application;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -46,10 +47,10 @@ public class WeatherRepository {
         dailyDBData = dbWeatherDao.getDailyDBWeatherData();
     }
 
-    public void fetchRemoteWeatherData(WeatherRemoteApiCallback callback) {
+    public void fetchRemoteWeatherData(double lat, double longi, WeatherRemoteApiCallback callback) {
         Call<NetworkWeatherDetails> weatherDetailCall = RetrofitHelper.getWeatherApiClient().getWeatherDetails(
-                22.7196,
-                75.8577,
+                lat,
+                longi,
                 "metric",
                 "minutely,alerts",
                 "6b40419e55e87b4c7eb082eca5f50dab"

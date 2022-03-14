@@ -1,6 +1,10 @@
 package com.example.quickweather.Utils;
 
+import android.provider.Settings;
+
 import com.example.quickweather.R;
+
+import java.util.Calendar;
 
 public class WeatherUtils {
 
@@ -101,5 +105,13 @@ public class WeatherUtils {
             return "broken clouds: 51-84%";
         else
             return "overcast clouds: 85-100%";
+    }
+
+    public static String getCurrentMinMaxTemp (int maxTemp, int minTemp) {
+        return maxTemp + "° / " + "°";
+    }
+
+    public static String getLastWeatherUpdated(long timestamp) {
+        return "Last updated: " + DateTimeUtil.getLocalTime(timestamp);
     }
 }

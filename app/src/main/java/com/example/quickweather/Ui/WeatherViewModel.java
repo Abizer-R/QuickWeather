@@ -1,6 +1,7 @@
 package com.example.quickweather.Ui;
 
 import android.app.Application;
+import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -38,9 +39,9 @@ public class WeatherViewModel extends AndroidViewModel  {
         dailyDBData = repository.getDailyDBData();
     }
 
-    public void updateDBWeatherData()  {
+    public void updateDBWeatherData(double lat, double longi)  {
 
-        repository.fetchRemoteWeatherData(new WeatherRemoteApiCallback() {
+        repository.fetchRemoteWeatherData(lat, longi, new WeatherRemoteApiCallback() {
             @Override
             public void onSuccess(NetworkWeatherDetails weatherDetails) {
                 Log.e(TAG, "onSuccess: GOTTTT DATAAAAAA");
