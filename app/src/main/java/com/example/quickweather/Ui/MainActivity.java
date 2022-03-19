@@ -177,6 +177,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void updateView() {
 
         if(!WeatherUtils.isNetworkAvailable(this)) {
+            currentLocation.setText(LocationUtils.getAddress(
+                    this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
             Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
                     "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
             snackbar.show();
