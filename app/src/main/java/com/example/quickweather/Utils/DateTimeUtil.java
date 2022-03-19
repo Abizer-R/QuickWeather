@@ -34,7 +34,7 @@ public class DateTimeUtil {
 
         int t = Integer.valueOf(dateFormat.format(timeD));
 
-        if(1 <= t && t <= 16)
+        if(6 <= t && t <= 16)
             return true;
         else
             return false;

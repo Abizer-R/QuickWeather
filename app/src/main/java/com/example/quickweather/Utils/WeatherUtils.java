@@ -4,12 +4,14 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings;
+import android.util.Log;
 
 import androidx.core.net.ConnectivityManagerCompat;
 
 import com.example.quickweather.R;
 
 import java.util.Calendar;
+import java.util.Date;
 
 public class WeatherUtils {
 

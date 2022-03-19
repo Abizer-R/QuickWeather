@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     protected void onResume() {
         super.onResume();
+        swipeRefreshLayout.setRefreshing(true);
         updateView();
     }
 
@@ -199,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
         currentLocation.setText(LocationUtils.getAddress(
                 this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
