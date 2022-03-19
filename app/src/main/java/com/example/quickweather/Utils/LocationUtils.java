@@ -13,6 +13,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -21,8 +22,10 @@ import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
 
 import com.example.quickweather.Ui.MainActivity;
+import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,11 +35,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class LocationUtils {
 
     public static final int REQUEST_LOCATION = 825;
+    private static final String TAG = LocationUtils.class.getSimpleName();
 
-    public static void turnOnGps(Context context) {
+    public static void turnOnGps(Activity context) {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("To get weather data for your current location, you need to enable gps.").setCancelable(false);
+        builder.setMessage("To get weather data for your current location, you need to enable gps and try again.").setCancelable(false);
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
@@ -49,7 +53,9 @@ public class LocationUtils {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.cancel();
-                Toast.makeText(context, "Since we can't fetch your current location, weather data of the last known location will be shown.", Toast.LENGTH_SHORT).show();
+                Snackbar snackbar = Snackbar.make(context.findViewById(android.R.id.content),
+                        "Weather data of the last known location will be shown.", Snackbar.LENGTH_LONG);
+                snackbar.show();
             }
         });
 
@@ -93,6 +99,7 @@ public class LocationUtils {
             e.printStackTrace();
         }
 
+        Log.e(TAG, "getAddress: " + city);
         return city;
     }
 }

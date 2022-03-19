@@ -1,6 +1,11 @@
 package com.example.quickweather.Utils;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.provider.Settings;
+
+import androidx.core.net.ConnectivityManagerCompat;
 
 import com.example.quickweather.R;
 
@@ -108,4 +113,11 @@ public class WeatherUtils {
     public static String getLastWeatherUpdated(long timestamp) {
         return "Last updated: " + DateTimeUtil.getLocalTime(timestamp);
     }
+
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        return networkInfo != null && networkInfo.isConnected();
+    }
+
 }

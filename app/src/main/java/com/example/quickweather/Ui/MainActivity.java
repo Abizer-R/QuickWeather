@@ -19,6 +19,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,6 +37,7 @@ import com.example.quickweather.Utils.WeatherUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
@@ -97,6 +99,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout.setOnRefreshListener(this);
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         updateView();
     }
 
@@ -169,11 +176,22 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateView() {
 
-
+        if(!WeatherUtils.isNetworkAvailable(this)) {
+            Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                    "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
+            snackbar.show();
+            return;
+        }
         if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             LocationUtils.turnOnGps(this);
+            if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_off_24));
+                lastKnownLocationTV.setVisibility(View.VISIBLE);
+            }
         } else {
             LocationUtils.updateLocation(this, fusedLocationProviderClient);
+            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_on_24));
+            lastKnownLocationTV.setVisibility(View.INVISIBLE);
         }
 
         weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
