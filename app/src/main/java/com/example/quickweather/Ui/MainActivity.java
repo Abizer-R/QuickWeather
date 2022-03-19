@@ -10,10 +10,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,8 +31,13 @@ import com.example.quickweather.R;
 import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
-import com.example.quickweather.Utils.DateTimeUtil;
+import com.example.quickweather.Utils.LocationUtils;
+import com.example.quickweather.Utils.SharedPrefsUtil;
 import com.example.quickweather.Utils.WeatherUtils;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
@@ -44,10 +55,18 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
-    // TODO: UPDATE THESE ALONG THE WAY TOO
+    private FusedLocationProviderClient fusedLocationProviderClient;
+
+    private LocationManager locationManager;
+
+    // TODO: changes according to "islocationAvalaible" prefs
     private ImageView locationIndicator;
+
+    // TODO: show according to latitude and longitude prefs
     private TextView currentLocation;
-    private TextView lastUpdatedCurrent;
+
+    // TODO: Visible only if islocationAvalaible = false
+    private TextView lastKnownLocationTV;
 
     private TextView currTemp;
     private TextView currDesc;
@@ -59,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         setViewModelAndObservers();
 
@@ -77,6 +98,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         updateView();
     }
 
@@ -111,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void bindViewsWithVariables() {
         locationIndicator = findViewById(R.id.location_image_view);
         currentLocation = findViewById(R.id.location_text_view);
-        lastUpdatedCurrent = findViewById(R.id.last_updated_current);
+        lastKnownLocationTV = findViewById(R.id.is_location_available);
 
         currTemp = findViewById(R.id.current_temp);
         currDesc = findViewById(R.id.current_desc);
@@ -149,7 +176,27 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateView() {
 
-        weatherViewModel.updateDBWeatherData();
+        if(!WeatherUtils.isNetworkAvailable(this)) {
+            Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                    "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
+            snackbar.show();
+            return;
+        }
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            LocationUtils.turnOnGps(this);
+            if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_off_24));
+                lastKnownLocationTV.setVisibility(View.VISIBLE);
+            }
+        } else {
+            LocationUtils.updateLocation(this, fusedLocationProviderClient);
+            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_on_24));
+            lastKnownLocationTV.setVisibility(View.INVISIBLE);
+        }
+
+        weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
+        currentLocation.setText(LocationUtils.getAddress(
+                this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
@@ -157,11 +204,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
         currDesc.setText(WeatherUtils.getDescription(weatherDetails.getWeatherId()));
         currDescIcon.setImageResource(WeatherUtils.getIconResourceId(weatherDetails.getWeatherId(), weatherDetails.getTimestamp()));
-        currMinMaxTemp.setText((int)weatherDetails.getMaxTemp() + "° / " +
-                (int)weatherDetails.getMinTemp() + "°");
+        currMinMaxTemp.setText(WeatherUtils.getCurrentMinMaxTemp(
+                (int)weatherDetails.getMaxTemp(),
+                (int)weatherDetails.getMinTemp()));
 
-        // TODO: Do update Last Seen after Implementing "Local"
-        lastUpdated.setText("last updated: " + DateTimeUtil.getLocalTime(weatherDetails.getTimestamp()));
+        // TODO: Should also go in SharedPref Changed function..... Cuz we have to save last updated time in sharedPrefs
+        /*
+            instead of this....
+            We will update the sharedPref
+         */
+        lastUpdated.setText(WeatherUtils.getLastWeatherUpdated(weatherDetails.getTimestamp()));
     }
 
     @Override
@@ -183,5 +235,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             Toast.makeText(this, "YOOOOOO BOIIII", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == LocationUtils.REQUEST_LOCATION) {
+
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if(location != null) {
+                            SharedPrefsUtil.setSharedPrefLocation(MainActivity.this, location.getLatitude(), location.getLongitude());
+                        }
+                    }
+                });
+            }
+        }
     }
 }
