@@ -10,7 +10,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -28,7 +31,11 @@ import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
 import com.example.quickweather.Utils.LocationUtils;
+import com.example.quickweather.Utils.SharedPrefsUtil;
 import com.example.quickweather.Utils.WeatherUtils;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.List;
 
@@ -45,6 +52,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     WeatherDailyDetailsAdapter dailyAdapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    private FusedLocationProviderClient fusedLocationProviderClient;
 
     private LocationManager locationManager;
 
@@ -87,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this);
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         updateView();
     }
 
@@ -159,22 +169,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateView() {
 
-        // TODO: Remove this location, as sharedPref is gonna be used to store location
-        Location currLoc = null;
+
         if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             LocationUtils.turnOnGps(this);
         } else {
-            currLoc = LocationUtils.updateLocation(this);
+            LocationUtils.updateLocation(this, fusedLocationProviderClient);
         }
 
-        if(currLoc == null) {
-            weatherViewModel.updateDBWeatherData(22.7196, 75.8577);
-            currentLocation.setText(LocationUtils.getAddress(this, 22.7196, 75.8577));
-        }
-        else {
-            weatherViewModel.updateDBWeatherData(currLoc.getLatitude(), currLoc.getLongitude());
-            currentLocation.setText(LocationUtils.getAddress(this, currLoc.getLatitude(), currLoc.getLongitude()));
-        }
+        weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
+        currentLocation.setText(LocationUtils.getAddress(
+                this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
@@ -213,5 +217,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             Toast.makeText(this, "YOOOOOO BOIIII", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if(requestCode == LocationUtils.REQUEST_LOCATION) {
+
+            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if(location != null) {
+                            SharedPrefsUtil.setSharedPrefLocation(MainActivity.this, location.getLatitude(), location.getLongitude());
+                        }
+                    }
+                });
+            }
+        }
     }
 }

@@ -4,4 +4,9 @@
     <string name="settings_title">Settings</string>
 
     <string name="last_known_location">Last known location</string>
+
+<!--    SharedPrefs-->
+    <string name="location_preferences">LOCATION_PREFERENCES</string>
+    <string name="location_latitude_key">LOCATION_LATITUDE_KEY</string>
+    <string name="location_longitude_key">LOCATION_LONGITUDE_KEY</string>
 </resources>

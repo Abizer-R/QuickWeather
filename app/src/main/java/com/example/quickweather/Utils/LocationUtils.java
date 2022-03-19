@@ -6,6 +6,7 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
@@ -19,6 +20,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
 
+import com.example.quickweather.Ui.MainActivity;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.tasks.OnSuccessListener;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -26,12 +31,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class LocationUtils {
 
-    private static final int REQUEST_LOCATION = 825;
+    public static final int REQUEST_LOCATION = 825;
 
     public static void turnOnGps(Context context) {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("Enable GPS Please").setCancelable(false);
+        builder.setMessage("To get weather data for your current location, you need to enable gps.").setCancelable(false);
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
@@ -53,19 +58,27 @@ public class LocationUtils {
     }
 
     // TODO: This one has to update the SharedPrefs lat and long, So later it will return "void".
-    public static Location updateLocation(Activity activity) {
+    public static void updateLocation(Activity activity, FusedLocationProviderClient fusedLocationProviderClient) {
         if(ActivityCompat.checkSelfPermission(
                 activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(
                         activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
             ActivityCompat.requestPermissions(activity, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
-            return null;
-        } else {
-            LocationManager locationMananger = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
-            return locationMananger.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            return;
         }
+
+        fusedLocationProviderClient.getLastLocation().addOnSuccessListener(activity, new OnSuccessListener<Location>() {
+            @Override
+            public void onSuccess(Location location) {
+                if(location != null) {
+                    SharedPrefsUtil.setSharedPrefLocation(activity, location.getLatitude(), location.getLongitude());
+                }
+            }
+        });
     }
+
+
 
     public static String getAddress(Context context, double lati, double longi) {
         Geocoder geocoder;
