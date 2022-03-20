@@ -5,8 +5,32 @@
 
     <string name="last_known_location">Last known location</string>
 
-<!--    SharedPrefs-->
+    <string name="settings_activity_title">Settings</string>
+
+    <!--    SharedPrefs-->
     <string name="location_preferences">LOCATION_PREFERENCES</string>
     <string name="location_latitude_key">LOCATION_LATITUDE_KEY</string>
     <string name="location_longitude_key">LOCATION_LONGITUDE_KEY</string>
+    <string name="last_updated_preference">LAST_UPDATED_PREFERENCE</string>
+    <string name="last_updated_key">LAST_UPDATED</string>
+
+
+    <string name="pref_temp_unit_title">Temperature Unit</string>
+    <string name="pref_temp_unit_key">temp_unit</string>
+    <string name="pref_temp_unit_default">@string/pref_temp_unit_celcius_value</string>
+
+    <string name="pref_temp_unit_celcius_label">°C</string>
+    <string name="pref_temp_unit_farhen_label">°F</string>
+    <string name="pref_temp_unit_celcius_value">0</string>
+    <string name="pref_temp_unit_farhen_value">1</string>
+
+    <string-array name="pref_temp_labels">
+        <item>@string/pref_temp_unit_celcius_label</item>
+        <item>@string/pref_temp_unit_farhen_label</item>
+    </string-array>
+    <string-array name="pref_temp_values">
+        <item>@string/pref_temp_unit_celcius_value</item>
+        <item>@string/pref_temp_unit_farhen_value</item>
+    </string-array>
+
 </resources>

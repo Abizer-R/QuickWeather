@@ -1,15 +1,19 @@
 package com.example.quickweather.Utils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.provider.Settings;
+import android.util.Log;
 
 import androidx.core.net.ConnectivityManagerCompat;
+import androidx.preference.PreferenceManager;
 
 import com.example.quickweather.R;
 
 import java.util.Calendar;
+import java.util.Date;
 
 public class WeatherUtils {
 
@@ -120,4 +124,19 @@ public class WeatherUtils {
         return networkInfo != null && networkInfo.isConnected();
     }
 
+    public static int getTempInFahrenheit(int temp) {
+            return (int) ((temp * 1.8) + 32);
+    }
+
+    public static boolean isFahrenheit(Context context) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String unit =  sharedPrefs.getString(
+                context.getString(R.string.pref_temp_unit_key),
+                context.getString(R.string.pref_temp_unit_default)
+        );
+        if(unit.equals(context.getString(R.string.pref_temp_unit_celcius_value)))
+            return false;
+        else
+            return true;
+    }
 }

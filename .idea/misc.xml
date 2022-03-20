@@ -3,12 +3,17 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/drawable/custom_rectangle.xml" value="0.1" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/drawable/daily_recyclerview_divider.xml" value="0.27708333333333335" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/drawable/main_activity_gradient_background.xml" value="0.15052083333333333" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/activity_main.xml" value="0.264" />
+        <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/activity_settings.xml" value="0.2609375" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/daily_recyclerview_item.xml" value="0.2609375" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/hourly_recyclerview_item.xml" value="0.25" />
+        <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/hourly_shimmer_item.xml" value="0.2609375" />
+        <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/layout/shimmer_layout.xml" value="0.246875" />
         <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/menu/main_menu.xml" value="0.2609375" />
+        <entry key="..\:/Users/abizer's ideapad/AndroidStudioProjects/QuickWeather/app/src/main/res/xml/settings_preference_screen.xml" value="0.20567375886524822" />
       </map>
     </option>
   </component>
