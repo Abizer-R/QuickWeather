@@ -240,6 +240,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
         snackbar.show();
         swipeRefreshLayout.setRefreshing(false);
+        nestedScrollView.setVisibility(View.VISIBLE);
     }
 
     private void checkGpsConnectivity() {
