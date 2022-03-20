@@ -21,6 +21,7 @@ import java.util.List;
 public class WeatherHourlyDetailsAdapter extends RecyclerView.Adapter<WeatherHourlyDetailsAdapter.HourlyDataHolder> {
 
     private List<HourlyWeatherForecast> hourlyForecasts = new ArrayList<>();
+    private boolean isFahrenheit = false;
 
     @NonNull
     @Override
@@ -39,7 +40,10 @@ public class WeatherHourlyDetailsAdapter extends RecyclerView.Adapter<WeatherHou
         holder.time.setText(DateTimeUtil.getLocalTime(currHour.getTimestamp()));
         // TODO: IDHR BHIII KUCHH KARRRR
         holder.icon.setImageResource(WeatherUtils.getIconResourceId(currHour.getWeatherId(), currHour.getTimestamp()));
-        holder.temp.setText(String.valueOf(currHour.getTemp()) + "°");
+        if(isFahrenheit)
+            holder.temp.setText(String.valueOf(WeatherUtils.getTempInFahrenheit(currHour.getTemp())) + "°");
+        else
+            holder.temp.setText(String.valueOf(currHour.getTemp()) + "°");
     }
 
     @Override
@@ -51,6 +55,10 @@ public class WeatherHourlyDetailsAdapter extends RecyclerView.Adapter<WeatherHou
         this.hourlyForecasts = hourlyForecasts;
         // TODO: change notifyDataSetChanged(); to something good
         notifyDataSetChanged();
+    }
+
+    public void setFahrenheit(boolean fahrenheit) {
+        isFahrenheit = fahrenheit;
     }
 
     class HourlyDataHolder extends RecyclerView.ViewHolder {

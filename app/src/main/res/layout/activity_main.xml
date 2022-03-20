@@ -62,7 +62,6 @@
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -88,10 +87,10 @@
                         android:id="@+id/current_temp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
                         android:text="27"
-                        android:textSize="96sp"
                         android:textColor="@color/white"
-                        android:layout_centerHorizontal="true"/>
+                        android:textSize="96sp" />
 
                     <TextView
                         android:layout_width="wrap_content"

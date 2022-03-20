@@ -12,17 +12,17 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 import com.example.quickweather.Mapper.DailyMapperLocal;
@@ -31,6 +31,8 @@ import com.example.quickweather.R;
 import com.example.quickweather.Ui.Adapters.WeatherDailyDetailsAdapter;
 import com.example.quickweather.Ui.Adapters.WeatherHourlyDetailsAdapter;
 
+import com.example.quickweather.Ui.Settings.SettingsActivity;
+import com.example.quickweather.Utils.DateTimeUtil;
 import com.example.quickweather.Utils.LocationUtils;
 import com.example.quickweather.Utils.SharedPrefsUtil;
 import com.example.quickweather.Utils.WeatherUtils;
@@ -78,7 +80,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         setViewModelAndObservers();
@@ -162,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         weatherViewModel.getHourlyDBData().observe(this, new Observer<List<DBWeatherDetails>>() {
             @Override
             public void onChanged(List<DBWeatherDetails> dbWeatherDetails) {
+                hourlyAdapter.setFahrenheit(WeatherUtils.isFahrenheit(MainActivity.this));
                 hourlyAdapter.setHourlyForecasts(hourlyMapperLocal.mapFromEntity(dbWeatherDetails));
             }
         });
@@ -169,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         weatherViewModel.getDailyDBData().observe(this, new Observer<List<DBWeatherDetails>>() {
             @Override
             public void onChanged(List<DBWeatherDetails> dbWeatherDetails) {
+                dailyAdapter.setFahrenheit(WeatherUtils.isFahrenheit(MainActivity.this));
                 dailyAdapter.setDailyForecasts(dailyMapperLocal.mapFromEntity(dbWeatherDetails));
             }
         });
@@ -183,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
                     "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
             snackbar.show();
+            swipeRefreshLayout.setRefreshing(false);
             return;
         }
         if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -205,18 +209,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
 
-        currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
+        if(WeatherUtils.isFahrenheit(this))
+            currTemp.setText(String.valueOf(WeatherUtils.getTempInFahrenheit(weatherDetails.getCurrTemp())));
+        else
+            currTemp.setText(String.valueOf(weatherDetails.getCurrTemp()));
         currDesc.setText(WeatherUtils.getDescription(weatherDetails.getWeatherId()));
         currDescIcon.setImageResource(WeatherUtils.getIconResourceId(weatherDetails.getWeatherId(), weatherDetails.getTimestamp()));
         currMinMaxTemp.setText(WeatherUtils.getCurrentMinMaxTemp(
                 (int)weatherDetails.getMaxTemp(),
                 (int)weatherDetails.getMinTemp()));
 
-        // TODO: Should also go in SharedPref Changed function..... Cuz we have to save last updated time in sharedPrefs
-        /*
-            instead of this....
-            We will update the sharedPref
-         */
         lastUpdated.setText(WeatherUtils.getLastWeatherUpdated(weatherDetails.getTimestamp()));
     }
 
@@ -234,9 +236,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if(item.getItemId() == R.id.menu_settings) {
-            // TODO: Settingssssss
-            Toast.makeText(this, "YOOOOOO BOIIII", Toast.LENGTH_SHORT).show();
+
+        if (item.getItemId() == R.id.menu_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -20,6 +20,7 @@ import java.util.List;
 public class WeatherDailyDetailsAdapter extends RecyclerView.Adapter<WeatherDailyDetailsAdapter.DailyDataHolder> {
 
     private List<DailyWeatherForecast> dailyForecasts = new ArrayList<>();
+    private boolean isFahrenheit = false;
 
     @NonNull
     @Override
@@ -38,7 +39,11 @@ public class WeatherDailyDetailsAdapter extends RecyclerView.Adapter<WeatherDail
         holder.date.setText(DateTimeUtil.getLocalDate(currDay.getTimestamp()));
         // TODO: IDHR BHIII KUCHHH KARRRR
         holder.icon.setImageResource(WeatherUtils.getIconResourceId(currDay.getWeatherId(), currDay.getTimestamp()));
-        holder.tempMinMax.setText(String.valueOf(currDay.getTemp_max()) + "° / " +
+        if(isFahrenheit)
+            holder.tempMinMax.setText(String.valueOf(WeatherUtils.getTempInFahrenheit(currDay.getTemp_max())) + "° / " +
+                    String.valueOf(WeatherUtils.getTempInFahrenheit(currDay.getTemp_min()) + "°"));
+        else
+            holder.tempMinMax.setText(String.valueOf(currDay.getTemp_max()) + "° / " +
                         String.valueOf(currDay.getTemp_min()) + "°");
     }
 
@@ -51,6 +56,10 @@ public class WeatherDailyDetailsAdapter extends RecyclerView.Adapter<WeatherDail
         this.dailyForecasts = dailyForecasts;
         // TODO: change notifyDataSetChanged(); to something good
         notifyDataSetChanged();
+    }
+
+    public void setFahrenheit(boolean fahrenheit) {
+        isFahrenheit = fahrenheit;
     }
 
     class DailyDataHolder extends RecyclerView.ViewHolder{
