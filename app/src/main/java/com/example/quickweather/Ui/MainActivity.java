@@ -3,6 +3,7 @@ package com.example.quickweather.Ui;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.widget.NestedScrollView;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -17,6 +18,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     WeatherDailyDetailsAdapter dailyAdapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
+    private NestedScrollView nestedScrollView;
 
     private FusedLocationProviderClient fusedLocationProviderClient;
 
@@ -76,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private TextView currMinMaxTemp;
     private TextView lastUpdated;
 
+    // TODO: Make an onSharedPref change listener so that when the temp unit is changed, you can reset the adapters
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,17 +92,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         bindViewsWithVariables();
 
         setRecyclerViews();
-        currTemp = findViewById(R.id.current_temp);
-        currDesc = findViewById(R.id.current_desc);
-        currDescIcon = findViewById(R.id.current_icon);
-        currMinMaxTemp = findViewById(R.id.current_max_min_temp);
-        lastUpdated = findViewById(R.id.last_updated);
 
         Toolbar myToolbar = findViewById(R.id.custom_toolbar);
         setSupportActionBar(myToolbar);
 
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(this);
+
 
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
     }
@@ -105,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     protected void onResume() {
         super.onResume();
-        swipeRefreshLayout.setRefreshing(true);
         updateView();
     }
 
@@ -138,6 +136,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void bindViewsWithVariables() {
+
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        nestedScrollView =  findViewById(R.id.nested_scroll_view);
+
         locationIndicator = findViewById(R.id.location_image_view);
         currentLocation = findViewById(R.id.location_text_view);
         lastKnownLocationTV = findViewById(R.id.is_location_available);
@@ -180,6 +183,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void updateView() {
 
+        swipeRefreshLayout.setRefreshing(true);
+        nestedScrollView.setVisibility(View.INVISIBLE);
         if(!WeatherUtils.isNetworkAvailable(this)) {
             currentLocation.setText(LocationUtils.getAddress(
                     this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
@@ -204,7 +209,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
         currentLocation.setText(LocationUtils.getAddress(
                 this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
-        swipeRefreshLayout.setRefreshing(false);
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                swipeRefreshLayout.setRefreshing(false);
+                nestedScrollView.setVisibility(View.VISIBLE);
+            }
+        }, 1000);
+
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
@@ -225,7 +238,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onRefresh() {
         updateView();
-        swipeRefreshLayout.setRefreshing(false);
     }
 
     @Override

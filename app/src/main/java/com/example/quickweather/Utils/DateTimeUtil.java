@@ -1,5 +1,6 @@
 package com.example.quickweather.Utils;
 
+import android.util.Log;
 import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
@@ -23,8 +24,11 @@ public class DateTimeUtil {
         cal.setTimeInMillis(timestamp * 1000);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, MMM dd");
+        String dateString = dateFormat.format(cal.getTime());
+        if(timestamp - (System.currentTimeMillis()/1000) < 86400)
+            return "Tomorrow" + dateString.substring(3);
 
-        return dateFormat.format(cal.getTime());
+        return dateString;
     }
 
     public static boolean isDay(long timestamp) {

@@ -71,7 +71,7 @@ public class WeatherViewModel extends AndroidViewModel  {
                 (int) dailyRemoteData.get(0).getDailyTemp().getMin()));
 
         // Adding "Hourly" data into dbWeatherDetailsList
-        for(int i=1; i<hourlyRemoteData.size(); i++) {
+        for(int i=1; i<=24; i++) {
             Hourly currHour = hourlyRemoteData.get(i);
             dbWeatherDetailsList.add(new DBWeatherDetails(
                     currHour.getDt(),
