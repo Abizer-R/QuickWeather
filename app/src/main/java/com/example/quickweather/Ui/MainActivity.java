@@ -234,12 +234,21 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void networkNotAvailable() {
+
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_off_24));
+            locationIndicator.setTag(getDrawable(R.drawable.ic_baseline_location_off_24).toString());
+            lastKnownLocationTV.setVisibility(View.VISIBLE);
+
+        }
+
         currentLocation.setText(LocationUtils.getAddress(
                 this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
         Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
                 "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
         snackbar.show();
         swipeRefreshLayout.setRefreshing(false);
+        nestedScrollView.setVisibility(View.VISIBLE);
     }
 
     private void checkGpsConnectivity() {
