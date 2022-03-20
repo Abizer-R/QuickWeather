@@ -11,6 +11,8 @@ import com.example.quickweather.R;
 
 public class SharedPrefsUtil {
 
+    public static boolean ignoreGps = false;
+
     public static void setSharedPrefLocation(Activity activity, double lati, double longi) {
         SharedPreferences sharedPrefs = activity.getSharedPreferences(
                 activity.getString(R.string.location_preferences), Context.MODE_PRIVATE);

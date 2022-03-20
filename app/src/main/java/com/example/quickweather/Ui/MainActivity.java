@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
@@ -25,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.quickweather.Data.Source.Local.Entity.DBWeatherDetails;
 import com.example.quickweather.Mapper.DailyMapperLocal;
@@ -80,7 +83,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private TextView lastUpdated;
 
     // TODO: Make an onSharedPref change listener so that when the temp unit is changed, you can reset the adapters
-
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (LocationManager.PROVIDERS_CHANGED_ACTION.matches(intent.getAction()))
+                checkGpsConnectivity();
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,8 +105,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Toolbar myToolbar = findViewById(R.id.custom_toolbar);
         setSupportActionBar(myToolbar);
 
-
-
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
@@ -105,6 +112,18 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     protected void onResume() {
         super.onResume();
         updateView();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(broadcastReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(broadcastReceiver);
     }
 
     private void setRecyclerViews() {
@@ -142,6 +161,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         nestedScrollView =  findViewById(R.id.nested_scroll_view);
 
         locationIndicator = findViewById(R.id.location_image_view);
+        locationIndicator.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                    LocationUtils.turnOnGps(MainActivity.this);
+            }
+        });
         currentLocation = findViewById(R.id.location_text_view);
         lastKnownLocationTV = findViewById(R.id.is_location_available);
 
@@ -186,25 +212,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout.setRefreshing(true);
         nestedScrollView.setVisibility(View.INVISIBLE);
         if(!WeatherUtils.isNetworkAvailable(this)) {
-            currentLocation.setText(LocationUtils.getAddress(
-                    this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
-            Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
-                    "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
-            snackbar.show();
-            swipeRefreshLayout.setRefreshing(false);
+            networkNotAvailable();
             return;
         }
-        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            LocationUtils.turnOnGps(this);
-            if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_off_24));
-                lastKnownLocationTV.setVisibility(View.VISIBLE);
-            }
-        } else {
-            LocationUtils.updateLocation(this, fusedLocationProviderClient);
-            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_on_24));
-            lastKnownLocationTV.setVisibility(View.INVISIBLE);
-        }
+
+        if(!SharedPrefsUtil.ignoreGps)
+            checkGpsConnectivity();
 
         weatherViewModel.updateDBWeatherData(SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this));
         currentLocation.setText(LocationUtils.getAddress(
@@ -218,6 +231,31 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             }
         }, 1000);
 
+    }
+
+    private void networkNotAvailable() {
+        currentLocation.setText(LocationUtils.getAddress(
+                this, SharedPrefsUtil.getSharedPrefLatitude(this), SharedPrefsUtil.getSharedPrefLongitude(this)));
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),
+                "Couldn't refresh feed. Check your internet connection.", Snackbar.LENGTH_LONG);
+        snackbar.show();
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    private void checkGpsConnectivity() {
+
+        if(!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            LocationUtils.turnOnGps(this);
+            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_off_24));
+            locationIndicator.setTag(getDrawable(R.drawable.ic_baseline_location_off_24).toString());
+            lastKnownLocationTV.setVisibility(View.VISIBLE);
+
+        } else {
+            LocationUtils.updateLocation(this, fusedLocationProviderClient);
+            locationIndicator.setImageDrawable(getDrawable(R.drawable.ic_baseline_location_on_24));
+            locationIndicator.setTag(getDrawable(R.drawable.ic_baseline_location_on_24).toString());
+            lastKnownLocationTV.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void updateCurrentWeatherData(DBWeatherDetails weatherDetails) {
