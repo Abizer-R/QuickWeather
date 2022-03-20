@@ -40,19 +40,21 @@ public class LocationUtils {
     public static void turnOnGps(Activity context) {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage("To get weather data for your current location, you need to enable gps and try again.").setCancelable(false);
+        builder.setMessage("To get weather data for your current location, you need to enable gps.").setCancelable(false);
 
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Enable gps", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 context.startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                SharedPrefsUtil.ignoreGps = false;
             }
         });
 
-        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("Ignore", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.cancel();
+                SharedPrefsUtil.ignoreGps = true;
                 Snackbar snackbar = Snackbar.make(context.findViewById(android.R.id.content),
                         "Weather data of the last known location will be shown.", Snackbar.LENGTH_LONG);
                 snackbar.show();
