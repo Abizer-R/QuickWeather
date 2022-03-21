@@ -11,7 +11,7 @@ Shows current weather details as well as hourly and daily forecast. <br/>
 1. Checks if GPS is enabled:
     - If enabled: Gets latitude and longitude of current location and stores it in Shared Preference.
     - If not enabled: Asks user to enable it.
-1. Fetches Data from openwathermap API wiht the help of Retrofit using the latitude and longitude from Shared Preferences.
+1. Fetches Data from openwathermap API with the help of Retrofit using the latitude and longitude from Shared Preferences.
 2. Stores it in local Database with the help of ROOM.
 3. Displays the Data to the User from the database.
 
